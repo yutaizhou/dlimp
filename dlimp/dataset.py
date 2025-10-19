@@ -149,6 +149,7 @@ class DLataset(tf.data.Dataset):
                 skip_prefetch=True,
                 num_parallel_calls_for_interleave_files=num_parallel_reads,
                 interleave_cycle_length=num_parallel_reads,
+                add_tfds_id=True,
             ),
         )._apply_options()
 
@@ -356,6 +357,7 @@ def _broadcast_metadata_rlds(i: tf.Tensor, traj: Dict[str, Any]) -> Dict[str, An
     trajectory. This function also adds the extra metadata fields `_len`, `_traj_index`, and `_frame_index`.
     """
     steps = traj.pop("steps")
+    tfds_id = traj.pop("tfds_id")
 
     traj_len = tf.shape(tf.nest.flatten(steps)[0])[0]
 
@@ -365,6 +367,7 @@ def _broadcast_metadata_rlds(i: tf.Tensor, traj: Dict[str, Any]) -> Dict[str, An
     # put steps back in
     assert "traj_metadata" not in steps
     traj = {**steps, "traj_metadata": metadata}
+    traj["tfds_id"] = tf.repeat(tfds_id, traj_len)
 
     assert "_len" not in traj
     assert "_traj_index" not in traj
